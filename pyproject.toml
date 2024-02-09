@@ -1,0 +1,28 @@
+[project]
+name = "PlexRec"
+version = "0.1.0"
+description = "Default template for PDM package"
+authors = [
+    {name = "TKDKid1000", email = "rhoneeiler@gmail.com"},
+]
+dependencies = [
+    "plexapi>=4.15.9",
+    "python-dotenv>=1.0.1",
+    "openai>=1.12.0", # Change to 
+    "numpy>=1.26.4",
+    "scikit-learn>=1.4.0",
+    "matplotlib>=3.8.2",
+    "chromadb>=0.4.22",
+    "tqdm>=4.66.1",
+    "sentence-transformers>=2.3.1",
+]
+requires-python = "==3.11.*"
+readme = "README.md"
+license = {text = "MIT"}
+
+
+[tool.pdm]
+distribution = false
+
+[tool.pdm.scripts]
+dev = "python3 -m src.plexrec --dev"
