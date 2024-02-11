@@ -19,9 +19,10 @@ Coming soon.
 - [x] Add a based, embedding-based suggestion system.
 - [ ] Implement more criteria for ranking, such as:
   - [ ] IMDB ratings for rankings.
-  - [ ] User's star reviews of past shows.
+  - [x] User's star reviews of past shows.
   - [ ] Currently trending shows from web searches.
   - [ ] Maybe an autonomous AI agent that can learn and create suggestions using the above.
+- [ ] Store past suggestions and use that for future suggestions.
 - [ ] A better way to manage the suggestions than a playlist.
 - [ ] Making this system easy to deploy.
 - [ ] Add some kind of UI.

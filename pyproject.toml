@@ -15,6 +15,9 @@ dependencies = [
     "chromadb>=0.4.22",
     "tqdm>=4.66.1",
     "sentence-transformers>=2.3.1",
+    "pyyaml>=6.0.1",
+    "fastapi>=0.109.2",
+    "uvicorn>=0.27.1",
 ]
 requires-python = "==3.11.*"
 readme = "README.md"

@@ -1,0 +1,13 @@
+playlist:
+  name: Recommendations
+  prune: yes
+suggestion_types:
+  - show
+  - movie
+weighting:
+  stars:
+    default: 5.0
+    include: yes
+server:
+  host: 127.0.0.1
+  port: 32401
