@@ -8,7 +8,7 @@ This project is designed as a very crude and certainly rudimentary, yet function
 
 - Recommending items without user data collection.
 - Determines suggestions through previously viewed shows.
-- Simply, embedding-based suggestion algorithm.
+- Simple, embedding-based suggestion algorithm.
 
 ## Usage
 
