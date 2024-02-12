@@ -12,23 +12,29 @@ from sklearn.manifold import TSNE
 #     api_key=os.environ["ANYSCALE_API_KEY"], base_url="https://api.endpoints.anyscale.com/v1"
 # )
 
-# embedder: SentenceTransformer = SentenceTransformer(
-#     "jinaai/jina-embeddings-v2-small-en", trust_remote_code=True
-# )
+
+class FreeableSentenceTransformer:
+    model_name: str
+    model: SentenceTransformer
+
+    def __init__(self, model_name: str) -> None:
+        self.model_name = model_name
+        self.model = None
+
+    def load(self):
+        if self.model is None:
+            self.model = SentenceTransformer(self.model_name, trust_remote_code=True)
+
+    def unload(self):
+        self.model = None
+
+
+embedder = FreeableSentenceTransformer("jinaai/jina-embeddings-v2-small-en")
 
 
 def embed(texts: list[str]):
-    # if embedder is None:
-    # Only load embedding model when necessary.
-    # embedder = SentenceTransformer(
-    #     "jinaai/jina-embeddings-v2-small-en", trust_remote_code=True
-    # )
-    # embedding: CreateEmbeddingResponse = oai.embeddings.create(
-    #     model="BAAI/bge-large-en-v1.5",
-    #     input=texts,
-    # )
-    # return [e.embedding for e in embedding.data]
-    return embedder.encode(texts).tolist()
+    embedder.load()
+    return embedder.model.encode(texts).tolist()
 
 
 def cosine_similarity(a: list[float], b: list[float]):
