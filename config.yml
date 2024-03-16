@@ -6,10 +6,11 @@ suggestion_types:
   - movie
 weighting:
   stars:
-    default: 5.0
+    default: 2.5
     include: yes
   embeddings:
     model_name: "jinaai/jina-embeddings-v2-small-en"
+  added_penalty: 1.05e-9
 server:
   host: 127.0.0.1
   port: 32401

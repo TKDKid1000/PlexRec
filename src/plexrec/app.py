@@ -1,7 +1,7 @@
 import os
-from contextlib import asynccontextmanager
+from typing import Annotated
 
-from fastapi import BackgroundTasks, FastAPI, Request
+from fastapi import BackgroundTasks, FastAPI, Header, Request
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -12,10 +12,6 @@ from pydantic import BaseModel
 
 from .config import config
 from .suggest import save_generate_suggestions
-
-
-class CreateSuggestion(BaseModel):
-    n: int
 
 
 class Suggestion(BaseModel):
@@ -61,16 +57,58 @@ def index(req: Request):
     )
 
 
+@app.get("/relations", response_class=HTMLResponse)
+def relations(req: Request):
+    return templates.TemplateResponse(request=req, name="relations.jinja2")
+
+
 @app.get("/suggest")
 def get_suggest(n: int = 5):
     return query_suggestions(n)
 
 
 @app.post("/suggest")
-def post_suggest(body: CreateSuggestion, background_tasks: BackgroundTasks):
-    background_tasks.add_task(save_generate_suggestions, plex=plex, n_results=body.n)
+def post_suggest(
+    n: int,
+    background_tasks: BackgroundTasks,
+    req: Request,
+    HX_Request: Annotated[str | None, Header(convert_underscores=True)] = None,
+):
+    background_tasks.add_task(save_generate_suggestions, plex=plex, n_results=n)
+    if HX_Request:
+        return templates.TemplateResponse(
+            request=req, name="events/create_suggestion.jinja2"
+        )
     return {"message": "Running suggestions in the background."}
+    # TODO: Use SSE or something to follow up about whether or not requests complete. Else, other TODO and implement polling in client.
 
 
 # TODO: Add API methods for removing suggestions, liking them, and disliking them.
+@app.delete("/suggest")
+def delete_suggest(id: int):
+    return {"message": f"Removing {id} suggestions."}
+
+
+@app.post("/suggest/like")
+def like_suggest():
+    return {"message": "Liking a suggestion."}
+
+
+@app.post("/suggest/dislike")
+def dislike_suggest():
+    return {"message": "Disliking a suggestion."}
+
+
 # TODO: Add API method for viewing currently running suggestion jobs.
+@app.get("/jobs")
+def get_jobs(
+    req: Request,
+    HX_Request: Annotated[str | None, Header(convert_underscores=True)] = None,
+):
+    jobs = []
+    if HX_Request:
+        return templates.TemplateResponse(
+            request=req, name="events/jobs.jinja2", context={"jobs": jobs}
+        )
+    else:
+        return {"jobs": jobs}

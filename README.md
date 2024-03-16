@@ -29,6 +29,7 @@ This app has one unnecessarily long configuration file, `config.yml`, to manage 
 
 - **Server host and port (`server.host`, `server.port`):** These allow you to set, of course, the hostname and port that the Plex recommendation server runs on. Typically, these do not need to be changed, as the entire system works just fine without the UI. However, if you wanted to make the UI accessible outside of the server's network, you can simply set the `server.host` value to `0.0.0.0` instead of `127.0.0.1`, which then allows access as long as the port is forwarded on TCP.
 - **Playlist prune (`playlist.prune`):** This setting is one of the more minor ones, but it can have a relatively significant impact. If this is enabled, the length of the recommendation playlist will always be set to the maximum possible recommendation results, which is currently hardcoded to 10. If you disable this, however, all of your historical recommendations will remain in the playlist until manually removed, even watched ones.
+- **Added Penalty (`weighted.added_penalty`):** Introduces a penalty based on when media was added to your Plex server. Using a negative number here will make recently added media more prevalent, while using a positive number increases the likelihood of returning older media. Set it to 0 or remove it to eliminate its effect.
 
 ## To Do
 
@@ -46,6 +47,10 @@ This app has one unnecessarily long configuration file, `config.yml`, to manage 
 - [ ] Documentation 😳
 - [ ] Enable setup through PyPi instead of cloning.
 - [ ] Merge the server URL and token into the config (more of a note to self).
+- [ ] Allow the usage of multiple media servers.
+- [ ] Find a method of managing dynamic IP addresses that will inevitably crash the server.
+- [ ] Create and/or adapt an image/video embedding model for maximum processing capabilities. OR use captions for embeddings.
+- [ ] Add threshold with that checks when last watched is a long time ago, and allows that movie to be resuggested.
 
 ## Contributing
 
