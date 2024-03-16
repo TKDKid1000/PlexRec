@@ -33,9 +33,9 @@ This app has one unnecessarily long configuration file, `config.yml`, to manage 
 
 ## To Do
 
-- [x] Add a based, embedding-based suggestion system.
+- [x] Add a basic, embedding-based suggestion system.
 - [ ] Implement more criteria for ranking, such as:
-  - [ ] IMDB ratings for rankings.
+  - [x] IMDB ratings for rankings.
   - [x] User's star reviews of past shows.
   - [ ] Currently trending shows from web searches.
   - [ ] Maybe an autonomous AI agent that can learn and create suggestions using the above.
@@ -51,6 +51,8 @@ This app has one unnecessarily long configuration file, `config.yml`, to manage 
 - [ ] Find a method of managing dynamic IP addresses that will inevitably crash the server.
 - [ ] Create and/or adapt an image/video embedding model for maximum processing capabilities. OR use captions for embeddings.
 - [ ] Add threshold with that checks when last watched is a long time ago, and allows that movie to be resuggested.
+- [ ] Use clustering to make multiple averages instead of one, allowing multiple genres of content.
+- [ ] Add a "don't like this" feature to the web UI.
 
 ## Contributing
 

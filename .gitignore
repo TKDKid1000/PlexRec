@@ -164,3 +164,4 @@ cython_debug/
 # Data
 chroma/
 suggestions.json
+plex_api_cache.sqlite

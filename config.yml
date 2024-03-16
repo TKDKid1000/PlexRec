@@ -20,3 +20,4 @@ server:
   port: 32401
 recommendation:
   interval:
+cache: -1

@@ -9,6 +9,7 @@ from plexapi.exceptions import NotFound
 from plexapi.playlist import Playlist
 from plexapi.server import PlexServer
 from pydantic import BaseModel
+from requests_cache import CachedSession
 
 from .config import config
 from .suggest import save_generate_suggestions
@@ -28,7 +29,12 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
 
-plex = PlexServer(os.environ["PLEX_SERVER_URL"], os.environ["PLEX_TOKEN"])
+cached_session = CachedSession(
+    "plex_api_cache", backend="sqlite", expire_after=config["cache"]
+)
+plex = PlexServer(
+    os.environ["PLEX_SERVER_URL"], os.environ["PLEX_TOKEN"], session=cached_session
+)
 
 
 def query_suggestions(n: int) -> list[Suggestion]:
