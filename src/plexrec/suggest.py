@@ -1,4 +1,5 @@
-from dataclasses import asdict, dataclass
+from time import time
+from typing import Literal
 
 import numpy as np
 from plexapi.exceptions import NotFound
@@ -6,6 +7,7 @@ from plexapi.library import MovieSection, ShowSection
 from plexapi.playlist import Playlist
 from plexapi.server import PlexServer
 from plexapi.video import Movie, Show
+from pydantic import BaseModel, RootModel
 from tqdm import tqdm
 
 from .config import config
@@ -14,10 +16,18 @@ from .media import fetch_media
 from .similarity import embed
 
 
-@dataclass
-class RelevanceSuggestion:
+class RelevanceSuggestion(BaseModel):
     title: str
+    type: Literal["show", "movie"]
     relevance: float
+
+
+class GeneratedSuggestionGroup(BaseModel):
+    time: float
+    suggestions: list[RelevanceSuggestion]
+
+
+GenerationSuggestions = RootModel[list[GeneratedSuggestionGroup]]
 
 
 def average_vectors(vectors: np.ndarray, weights: np.ndarray) -> np.ndarray:
@@ -25,6 +35,7 @@ def average_vectors(vectors: np.ndarray, weights: np.ndarray) -> np.ndarray:
 
 
 def save_generate_suggestions(plex: PlexServer, n_results: int):
+    generation_start = time()
     medias = fetch_media(plex)
 
     for media in tqdm(medias):
@@ -41,35 +52,54 @@ def save_generate_suggestions(plex: PlexServer, n_results: int):
             embedding = embed([doc])[0]
             media_collection.add(
                 ids=media.id,
-                metadatas=asdict(media),
+                metadatas=media.model_dump(),
                 documents=doc,
                 embeddings=embedding,
             )
 
     suggestions = suggest_media(plex, n_results=n_results)
-    suggestion_titles = list(suggestion.title for suggestion in suggestions)
+    suggestion_media: list[Movie | Show] = []
+
+    movie_section: MovieSection = plex.library.section("Movies")
+    show_section: ShowSection = plex.library.section("TV Shows")
+
+    for suggestion in suggestions:
+        if suggestion.type == "movie":
+            suggestion_media.append(movie_section.get(suggestion.title))
+        else:
+            suggestion_media.append(show_section.get(suggestion.title).episodes()[0])
 
     playlist_name = config["playlist"]["name"]
-    playlist: Playlist
 
-    # Add items to the playlist, creating it if necessary.
+    # TODO: Use a conditional instead of an implicit try-except for this.
     try:
-        playlist = plex.playlist(playlist_name)
-        # Add titles in groups of 5 because apparently Plex doesn't like large groups at once.
-        GROUP_SIZE = 5
-        for group_titles in [
-            suggestion_titles[i : i + GROUP_SIZE]
-            for i in range(0, len(suggestion_titles), GROUP_SIZE)
-        ]:
-            playlist.addItems(group_titles)
-
+        ...
     except NotFound:
-        playlist = plex.createPlaylist(playlist_name, items=suggestion_titles)
+        plex.createPlaylist(playlist_name, items=suggestion_media[0])
+
+    playlist: Playlist = plex.playlist(playlist_name)
+    # Add titles in groups of 5 because apparently Plex doesn't like large groups at once.
+    group_size = 5
+    for groups in [
+        suggestion_media[i : i + group_size]
+        for i in range(0, len(suggestion_media), group_size)
+    ]:
+        playlist.addItems(groups)
+
+    with open("suggestions.json", encoding="utf-8") as suggestions_file:
+        suggestion_groups: GenerationSuggestions = (
+            GenerationSuggestions.model_validate_json(suggestions_file.read())
+        )
+    suggestion_groups.root.append(
+        GeneratedSuggestionGroup(suggestions=suggestions, time=generation_start)
+    )
+    with open("suggestions.json", "w", encoding="utf-8") as suggestions_file:
+        suggestions_file.write(suggestion_groups.model_dump_json())
 
     if config["playlist"]["prune"]:
         # Prunes (removes) stale suggestions.
         for item in playlist.items():
-            if item not in suggestion_titles:
+            if item not in suggestion_media:
                 playlist.removeItem(item)
 
 
@@ -94,8 +124,6 @@ def suggest_media(
     )
 
     stars = np.ones(len(watched["ids"]))
-    added_penalty = np.ones(len(watched["ids"]))
-    print(stars.shape)
 
     # Everything in this loop is to be used as weighting to calculate the average.
     for idx, metadata in enumerate(tqdm(watched["metadatas"])):
@@ -136,9 +164,6 @@ def suggest_media(
     suggestions = []
 
     for idx, suggestion_metadata in enumerate(suggestion_metadatas):
-        suggestion_title = sections[suggestion_metadata["type"]].get(
-            suggestion_metadata["title"]
-        )
         try:
             media: Movie | Show = sections[suggestion_metadata["type"]].get(
                 suggestion_metadata["title"]
@@ -157,10 +182,25 @@ def suggest_media(
                 media.addedAt.timestamp() * config["weighting"]["added_penalty"]
             )
 
+        if "critic" in config["weighting"]["ratings"]:
+            relevance += (
+                media.rating
+                or config["weighting"]["ratings"]["default"]
+                * config["weighting"]["ratings"]["critic"]
+            )
+        if "audience" in config["weighting"]["ratings"]:
+            relevance += (
+                media.audienceRating
+                or config["weighting"]["ratings"]["default"]
+                * config["weighting"]["ratings"]["audience"]
+            )
+
         suggestions.append(
-            RelevanceSuggestion(title=suggestion_title, relevance=relevance)
+            RelevanceSuggestion(
+                title=media.title, relevance=relevance, type=suggestion_metadata["type"]
+            )
         )
 
     suggestions = sorted(suggestions, key=lambda s: s.relevance)
 
-    return suggestions[: n_results + 1]
+    return suggestions[-n_results:]

@@ -11,6 +11,10 @@ weighting:
   embeddings:
     model_name: "jinaai/jina-embeddings-v2-small-en"
   added_penalty: 1.05e-9
+  ratings:
+    critic: 1.5e-1
+    audience: 1.5e-1
+    default: 5.0
 server:
   host: 127.0.0.1
   port: 32401

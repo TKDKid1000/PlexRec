@@ -1,12 +1,11 @@
 from plexapi.library import MovieSection, ShowSection
 from plexapi.server import PlexServer
 from plexapi.video import Movie, Show
-from dataclasses import dataclass
 from tqdm import tqdm
+from pydantic import BaseModel
 
 
-@dataclass
-class Media:
+class Media(BaseModel):
     id: str
     title: str
     summary: str
