@@ -12,16 +12,15 @@ This project is designed as a very crude and certainly rudimentary, yet function
 
 ## Usage
 
-1. Clone this repository. In the future, the app will be available on PyPi, but not yet..
+1. Install the app from PyPi using: `pip3 install plexrec`.
 2. Create a `.env` file in the project's root directory containing `PLEX_SERVER_URL` and `PLEX_TOKEN`.
    1. Open the [Plex web app](https://app.plex.tv/desktop/#!/) in a browser with modern developer tools. This could be Chrome, Firefox, Edge, Safari, or any other that can log network requests.
    2. Open your browser's developer tools and navigate to the "Network" tab in your respective browser.
       Reload the page <kbd>Ctrl/Cmd+R</kbd>.
    3. Scroll until you find the first successful (status 200) request to `/providers`. Copy the main URL through the port number as `PLEX_SERVER_URL`, and the value of `X-Plex-Token` as `PLEX_TOKEN`.
 3. Configure the relatively self-explanatory `config.yml` as you would like. Visit the documentation page on configuration for more details.
-4. Execute the command `pdm install` to download all of the app's dependencies. This should only have to be done once.
-5. Execute the command `pdm start` to run the server. You should be able to visit the printed URL to see the recommendations UI.
-6. You can now visit the recommendations UI at any time, or navigate to the "Recommendations" playlist in any Plex app. The recommendations UI is certainly easier to navigate, and it has many more features, but the playlist is there to make your recommendations accessible anywhere that you watch Plex.
+4. Execute the command `python3 -m plexrec` in the same directory as your `config.yml` and `.env` files.
+5. You can now visit the recommendations UI at any time, or navigate to the "Recommendations" playlist in any Plex app. The recommendations UI is certainly easier to navigate, and it has many more features, but the playlist is there to make your recommendations accessible anywhere that you watch Plex.
 
 ## Configuration
 
