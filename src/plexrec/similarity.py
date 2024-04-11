@@ -45,7 +45,7 @@ def embed_subtitles(movie: Movie) -> list[SubtitleStream]:
     # print(playlist.segments)
 
 
-def embed(texts: list[str]):
+def embed(texts: list[str]) -> list[list[float]]:
     embedder.load()
     return embedder.model.encode(texts).tolist()
 
@@ -78,5 +78,6 @@ def plot_similarity(texts: list[str], embeddings: list[float], colors: list[str]
 
 if __name__ == "__main__":
     plex = PlexServer(os.environ["PLEX_SERVER_URL"], os.environ["PLEX_TOKEN"])
+    print(plex.url("/"))
     # print(plex.url("/library/metadata/192968/subtitles?forced=0&hearingImpaired=0&language=en", True))
     # print(embed_subtitles(plex.search("Taken")[0])[0].)

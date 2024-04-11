@@ -78,6 +78,13 @@ def save_generate_suggestions(plex: PlexServer, n_results: int):
         plex.createPlaylist(playlist_name, items=suggestion_media[0])
 
     playlist: Playlist = plex.playlist(playlist_name)
+
+    if config["playlist"]["prune"]:
+        # Prunes (removes) stale suggestions.
+        print(playlist.items())
+        for item in playlist.items():
+            playlist.removeItems(item)
+
     # Add titles in groups of 5 because apparently Plex doesn't like large groups at once.
     group_size = 5
     for groups in [
@@ -95,12 +102,6 @@ def save_generate_suggestions(plex: PlexServer, n_results: int):
     )
     with open("suggestions.json", "w", encoding="utf-8") as suggestions_file:
         suggestions_file.write(suggestion_groups.model_dump_json())
-
-    if config["playlist"]["prune"]:
-        # Prunes (removes) stale suggestions.
-        for item in playlist.items():
-            if item not in suggestion_media:
-                playlist.removeItem(item)
 
 
 # TODO: Make this all async using asyncio.gather and asyncio.to_thread
@@ -126,7 +127,9 @@ def suggest_media(
     stars = np.ones(len(watched["ids"]))
 
     # Everything in this loop is to be used as weighting to calculate the average.
-    for idx, metadata in enumerate(tqdm(watched["metadatas"])):
+    for idx, metadata in enumerate(
+        tqdm(watched["metadatas"], desc="Average Embedding")
+    ):
         try:
             media: Movie | Show = sections[metadata["type"]].get(metadata["title"])
         except NotFound:
@@ -136,7 +139,6 @@ def suggest_media(
                 title=metadata["title"],
                 maxresults=1,
             )
-            print(results)
 
         if config["weighting"]["stars"]["include"]:
             rating = media.userRating
@@ -178,22 +180,18 @@ def suggest_media(
 
         relevance = suggestion_distances[idx]
         if "added_penalty" in config["weighting"]:
-            relevance += (
+            relevance -= (
                 media.addedAt.timestamp() * config["weighting"]["added_penalty"]
             )
 
         if "critic" in config["weighting"]["ratings"]:
-            relevance += (
-                media.rating
-                or config["weighting"]["ratings"]["default"]
-                * config["weighting"]["ratings"]["critic"]
-            )
+            relevance -= (
+                media.rating or config["weighting"]["ratings"]["default"]
+            ) * config["weighting"]["ratings"]["critic"]
         if "audience" in config["weighting"]["ratings"]:
-            relevance += (
-                media.audienceRating
-                or config["weighting"]["ratings"]["default"]
-                * config["weighting"]["ratings"]["audience"]
-            )
+            relevance -= (
+                media.audienceRating or config["weighting"]["ratings"]["default"]
+            ) * config["weighting"]["ratings"]["audience"]
 
         suggestions.append(
             RelevanceSuggestion(
@@ -203,4 +201,4 @@ def suggest_media(
 
     suggestions = sorted(suggestions, key=lambda s: s.relevance)
 
-    return suggestions[-n_results:]
+    return suggestions[:n_results]
