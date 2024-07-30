@@ -10,7 +10,7 @@ weighting:
     include: yes
   embeddings:
     model_name: "jinaai/jina-embeddings-v2-small-en"
-  added_penalty: 0 # 1.05e-9
+  added: 0.01
   ratings:
     critic: 0 # 0.1e-1
     audience: 0 # 0.1e-1

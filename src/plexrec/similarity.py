@@ -54,6 +54,23 @@ def cosine_similarity(a: list[float], b: list[float]):
     return np.dot(a, b) / (norm(a) * norm(b))
 
 
+def similarity_2d(embeddings: list[list[float]]):
+    embeddings = np.array(embeddings)
+    shrunk = TSNE(
+        n_components=2, learning_rate="auto", init="pca", perplexity=3, random_state=42
+    ).fit_transform(embeddings)
+
+    x = [x for x, _ in shrunk]
+    y = [y for _, y in shrunk]
+
+    kmeans = KMeans(n_clusters=20, random_state=42)
+    kmeans.fit(list(zip(x, y)))
+
+    points = zip(x, y)
+
+    return list({"x": float(p[0]), "y": float(p[1]), "r": 3, "idx": i} for i, p in enumerate(points)), kmeans.labels_
+
+
 def plot_similarity(texts: list[str], embeddings: list[float], colors: list[str]):
     embeddings = np.array(embeddings)
     shrunk = TSNE(

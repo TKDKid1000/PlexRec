@@ -1,3 +1,4 @@
+from collections import defaultdict
 import os
 import re
 from typing import Annotated
@@ -6,16 +7,17 @@ from fastapi import BackgroundTasks, FastAPI, Header, Request
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+import numpy as np
 from plexapi.exceptions import NotFound
 from plexapi.playlist import Playlist
 from plexapi.server import PlexServer
 from pydantic import BaseModel
-from requests_cache import CachedSession
+from requests_cache import CachedSession, NEVER_EXPIRE
 
 from .config import config
 from .database import media_collection
-from .similarity import embed
-from .suggest import save_generate_suggestions
+from .similarity import embed, similarity_2d
+from .suggest import GenerationSuggestions, save_generate_suggestions
 
 
 class Suggestion(BaseModel):
@@ -65,7 +67,7 @@ def index(req: Request):
     return templates.TemplateResponse(
         request=req,
         name="index.jinja2",
-        context={"suggestions": query_suggestions(10)},
+        context={"suggestions": query_suggestions(100)},
     )
 
 
@@ -133,3 +135,85 @@ def get_jobs(
         )
     else:
         return {"jobs": jobs}
+
+
+@app.get("/relations/data")
+def get_relations_data():
+    with open("suggestions.json", encoding="utf-8") as suggestions_file:
+        suggestion_groups: GenerationSuggestions = (
+            GenerationSuggestions.model_validate_json(suggestions_file.read())
+        )
+    weighted_average = suggestion_groups.root[-1].weighted_average
+
+    data = media_collection.get(include=["metadatas", "embeddings"])
+    points, group_classifications = similarity_2d(list(data["embeddings"]) + [weighted_average])
+
+    weighted_average_point = points.pop() # Get and remove last item
+    group_classifications = group_classifications[:-1] # Remove last item
+
+    weighted_average_point["r"] = 5
+
+    colors = [
+        "#800000",
+        "#9A6324",
+        "#808000",
+        "#469990",
+        "#000075",
+        "#e6194B",
+        "#f58231",
+        "#ffe119",
+        "#bfef45",
+        "#3cb44b",
+        "#42d4f4",
+        "#4363d8",
+        "#911eb4",
+        "#f032e6",
+        "#a9a9a9",
+        "#fabed4",
+        "#ffd8b1",
+        "#fffac8",
+        "#aaffc3",
+        "#dcbeff",
+    ]
+
+    point_labels = []
+    groups = defaultdict(list)
+    group_labels = []
+
+    for idx, point in enumerate(points):
+        groups[group_classifications[idx]].append(point)
+
+    for group in groups.values():
+        counts = defaultdict(int)
+        for point in group:
+            genres = str(data["metadatas"][point["idx"]]["genres"]).split(", ")
+            for genre in genres:
+                counts[genre] += 1
+
+            point_labels.append(data["metadatas"][point["idx"]]["title"])
+
+        # primary_genres = [
+        #     genres for genre in genres if max(counts, key=counts.get) or "None"
+        # ]
+        primary_genre = max(counts, key=counts.get) or "None"
+        group_labels.append(primary_genre)
+
+    datasets = [
+        {"label": group_labels[idx], "data": group, "backgroundColor": colors[idx]}
+        for idx, group in enumerate(groups.values())
+    ]
+
+    datasets.append(
+        {
+            "label": "Average",
+            "data": [weighted_average_point],
+            "backgroundColor": "#ffffff"
+        }
+    )
+    return {
+        "datasets": datasets,
+        "labels": [
+            [data["metadatas"][point["idx"]]["title"] for point in group]
+            for group in groups.values()
+        ] + [["Average"]],
+    }

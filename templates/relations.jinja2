@@ -26,32 +26,39 @@
         integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
         crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-    <script>
+    <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
+    <script type="module">
+        const { datasets, labels } = await fetch("/relations/data").then(res => res.json())
+        console.log(labels)
         new Chart(document.getElementById("relations"), {
-            type: 'scatter',
+            type: 'bubble',
             data: {
-                datasets: [{
-                    label: "Dataset",
-                    data: [{
-                        x: -10,
-                        y: 0,
-                        label: "s"
-                    }, {
-                        x: 0,
-                        y: 10
-                    }, {
-                        x: 10,
-                        y: 5
-                    }, {
-                        x: 0.5,
-                        y: 5.5
-                    }],
-                }]
+                datasets
             },
             options: {
-                scales: {
-                    y: {
-                        beginAtZero: true
+                plugins: {
+                    zoom: {
+                        zoom: {
+                            wheel: {
+                                enabled: true,
+                            },
+                            pinch: {
+                                enabled: true
+                            },
+                            mode: 'xy',
+                        },
+                        pan: {
+                            enabled: true,
+                            mode: 'xy',
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            footer(items) {
+                                return labels[items[0].datasetIndex][items[0].dataIndex]
+                            }
+                        }
                     }
                 }
             }
