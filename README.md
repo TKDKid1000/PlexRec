@@ -48,7 +48,9 @@ This app has one unnecessarily long configuration file, `config.yml`, to manage 
 - [ ] Merge the server URL and token into the config (more of a note to self).
 - [ ] Allow the usage of multiple media servers.
 - [ ] Find a method of managing dynamic IP addresses that will inevitably crash the server.
-- [ ] Create and/or adapt an image/video embedding model for maximum processing capabilities. OR use captions for embeddings.
+- [ ] Caption embedding for more advanced similarity comparison
+  - [x] Subtitle searching and downloading
+  - [ ] Subtitle embedding and comparison
 - [ ] Add threshold with that checks when last watched is a long time ago, and allows that movie to be resuggested.
 - [ ] Use clustering to make multiple averages instead of one, allowing multiple genres of content.
 - [ ] Add a "don't like this" feature to the web UI.
