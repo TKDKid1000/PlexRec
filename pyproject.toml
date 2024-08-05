@@ -1,6 +1,6 @@
 [project]
 name = "PlexRec"
-version = "0.1.0"
+version = "0.1.1"
 description = "Default template for PDM package"
 authors = [{ name = "TKDKid1000", email = "rhoneeiler@gmail.com" }]
 dependencies = [
