@@ -166,6 +166,8 @@ class Podnapisi(SubtitleProvider):
 
 
 if __name__ == "__main__":
-    subtitle = Subscene().get_srt("tt0086200")
+    subtitle = Subscene().get_srt(input("IMDB ID > "))
     clean = clean_srt(subtitle)
     print(clean)
+    print(len(clean))
+    print()

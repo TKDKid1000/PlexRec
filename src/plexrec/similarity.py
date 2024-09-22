@@ -12,6 +12,8 @@ from sentence_transformers import SentenceTransformer
 from sklearn.cluster import KMeans
 from sklearn.manifold import TSNE
 
+from .config import config
+
 # oai = OpenAI(
 #     api_key=os.environ["ANYSCALE_API_KEY"], base_url="https://api.endpoints.anyscale.com/v1"
 # )
@@ -33,7 +35,7 @@ class FreeableSentenceTransformer:
         self.model = None
 
 
-embedder = FreeableSentenceTransformer("jinaai/jina-embeddings-v2-small-en")
+embedder = FreeableSentenceTransformer(config["weighting"]["embeddings"]["model_name"])
 
 
 def embed_subtitles(movie: Movie) -> list[SubtitleStream]:
